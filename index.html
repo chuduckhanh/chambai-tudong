@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chấm Bài AI">
+<title>Chấm Bài AI</title>
+<style>
+:root{--p:#2563eb;--pl:#eff6ff;--s:#16a34a;--sl:#f0fdf4;--w:#d97706;--wl:#fffbeb;--r:#dc2626;--rl:#fef2f2;--g:#6b7280;--b:#e5e7eb;--bg:#f3f4f6;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:#111;min-height:100vh;max-width:480px;margin:0 auto;position:relative;}
+
+header{background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;}
+header .logo{font-size:26px;}
+header h1{font-size:17px;font-weight:800;}
+header p{font-size:11px;opacity:.85;}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid var(--b);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom);}
+.nav-btn{flex:1;padding:10px 4px 8px;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:600;color:var(--g);transition:color .2s;}
+.nav-btn .icon{font-size:20px;}
+.nav-btn.active{color:var(--p);}
+.nav-btn.active .icon{filter:drop-shadow(0 0 4px rgba(37,99,235,.4));}
+
+.page{display:none;padding:14px 14px 80px;min-height:calc(100vh - 60px);}
+.page.active{display:block;}
+
+.card{background:#fff;border-radius:12px;border:1px solid var(--b);padding:14px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.card-title{font-size:14px;font-weight:700;color:#1e40af;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+
+label{display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:#374151;}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--b);border-radius:10px;font-size:14px;font-family:inherit;outline:none;background:#fff;-webkit-appearance:none;}
+input:focus,select:focus,textarea:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+textarea{resize:vertical;min-height:80px;}
+.fg{margin-bottom:12px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+.btn{padding:11px 16px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;-webkit-appearance:none;}
+.btn:active{transform:scale(.97);}
+.bp{background:var(--p);color:#fff;}
+.bs{background:var(--s);color:#fff;}
+.br{background:var(--r);color:#fff;}
+.bo{background:#fff;color:var(--p);border:2px solid var(--p);}
+.bw{background:var(--w);color:#fff;}
+.bfull{width:100%;}
+.bsm{padding:6px 12px;font-size:12px;}
+
+/* SUBJECT CARDS */
+.subj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.subj-card{border:2px solid var(--b);border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .2s;background:#fff;}
+.subj-card.sel{border-color:var(--p);background:var(--pl);}
+.subj-card .si{font-size:22px;margin-bottom:4px;}
+.subj-card .sn{font-size:11px;font-weight:700;color:#374151;}
+.subj-card.sel .sn{color:var(--p);}
+
+/* SUITABILITY BADGE */
+.suit{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-top:4px;}
+.suit-hi{background:#dcfce7;color:var(--s);}
+.suit-md{background:#fef9c3;color:var(--w);}
+.suit-lo{background:#fee2e2;color:var(--r);}
+
+/* UPLOAD & CAMERA */
+.upload-box{border:2px dashed var(--p);border-radius:12px;padding:20px;text-align:center;background:var(--pl);cursor:pointer;position:relative;}
+.upload-box input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0;}
+.upload-box p{font-size:13px;color:var(--p);font-weight:600;margin-top:6px;}
+.upload-box small{font-size:11px;color:var(--g);}
+
+.img-preview{width:100%;border-radius:10px;border:2px solid var(--b);margin-top:10px;display:block;}
+.del-img{background:var(--r);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;margin-top:6px;width:100%;}
+
+/* CAMERA MODAL */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:500;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+.modal.show{display:flex;}
+#vid{width:100%;max-width:440px;border-radius:10px;transform:scaleX(-1);}
+.cam-bar{display:flex;gap:16px;margin-top:16px;align-items:center;}
+.snap{width:66px;height:66px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.5);cursor:pointer;font-size:28px;display:flex;align-items:center;justify-content:center;}
+#cv{display:none;}
+
+/* RESULT */
+.score-hero{text-align:center;padding:20px;}
+.score-num{font-size:64px;font-weight:900;line-height:1;}
+.score-sub{font-size:14px;color:var(--g);margin-top:4px;}
+.grade-pill{display:inline-block;padding:5px 20px;border-radius:20px;font-size:15px;font-weight:800;margin-top:8px;}
+.prog{height:10px;background:var(--b);border-radius:5px;overflow:hidden;margin:10px 0;}
+.prog-fill{height:100%;border-radius:5px;transition:width 1.2s;}
+
+.q-res{border-radius:10px;border:1px solid;padding:12px;margin-bottom:10px;}
+.q-res.hi{background:var(--sl);border-color:#86efac;}
+.q-res.md{background:var(--wl);border-color:#fcd34d;}
+.q-res.lo{background:var(--rl);border-color:#fca5a5;}
+.q-res-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;}
+.ocr-box{background:#fff;border:1px solid var(--b);border-radius:8px;padding:8px;font-size:12px;font-family:monospace;white-space:pre-wrap;max-height:90px;overflow-y:auto;margin:6px 0;color:#374151;}
+.tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;margin:2px;}
+.tag-g{background:#dcfce7;color:var(--s);}
+.tag-r{background:#fee2e2;color:var(--r);}
+
+/* HISTORY */
+.hist-item{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--b);}
+.hist-item:last-child{border-bottom:none;}
+.hist-name{font-weight:700;font-size:14px;}
+.hist-sub{font-size:11px;color:var(--g);margin-top:2px;}
+.hist-score{font-size:18px;font-weight:900;color:var(--p);}
+
+/* SETTINGS */
+.api-notice{background:var(--pl);border:1px solid #bfdbfe;border-radius:10px;padding:11px;font-size:12px;color:#1e40af;margin-bottom:12px;line-height:1.6;}
+.tip-list li{font-size:12px;line-height:2;color:#374151;padding-left:4px;}
+
+/* LOADING */
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(255,255,255,.9);z-index:300;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+.loading-overlay.show{display:flex;}
+.spinner{width:48px;height:48px;border:4px solid var(--b);border-top-color:var(--p);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:15px;font-weight:700;color:var(--p);text-align:center;}
+.loading-sub{font-size:12px;color:var(--g);}
+
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(60px);background:#1f2937;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;z-index:400;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+.step-bar{display:flex;justify-content:center;gap:6px;margin-bottom:14px;}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--b);}
+.step-dot.done{background:var(--s);}
+.step-dot.active{background:var(--p);width:24px;border-radius:4px;}
+
+.stat-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
+.stat-box{background:#fff;border-radius:10px;padding:12px;text-align:center;border:1px solid var(--b);}
+.stat-val{font-size:28px;font-weight:900;color:var(--p);}
+.stat-lbl{font-size:11px;color:var(--g);margin-top:2px;}
+
+.notice-warn{background:var(--wl);border:1px solid #fcd34d;border-radius:10px;padding:10px;font-size:12px;color:#92400e;margin-bottom:12px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">📝</div>
+  <div>
+    <h1>Chấm Bài AI</h1>
+    <p>Chụp ảnh bài giấy → AI chấm tự động</p>
+  </div>
+</header>
+
+<!-- PAGE 1: ĐỀ + ĐÁP ÁN -->
+<div class="page active" id="pg-setup">
+  <div class="card">
+    <div class="card-title">📌 Chọn môn học</div>
+    <div class="subj-grid" id="subj-grid"></div>
+    <div id="subj-note"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Thông tin đề</div>
+    <div class="fg"><label>Tên đề kiểm tra</label><input id="ex-title" placeholder="Kiểm tra 15 phút - Chương 2" /></div>
+    <div class="row2">
+      <div class="fg"><label>Lớp</label><input id="ex-class" placeholder="10A1" /></div>
+      <div class="fg"><label>Tổng điểm</label><input type="number" id="ex-total" value="10" /></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">✍️ Đáp án mẫu</div>
+    <div id="qa-list"></div>
+    <button class="btn bo bfull" onclick="addQ()" style="margin-bottom:10px;">➕ Thêm câu hỏi</button>
+    <button class="btn bfull" style="background:#7c3aed;color:#fff;" onclick="autoRubric()">🤖 Tự tạo tiêu chí chấm</button>
+  </div>
+  <div id="rubric-section" style="display:none;">
+    <div class="card">
+      <div class="card-title">📐 Tiêu chí chấm</div>
+      <div id="rubric-list"></div>
+    </div>
+  </div>
+
+  <button class="btn bp bfull" onclick="saveAndNext()" style="margin-bottom:6px;">💾 Lưu đề → Sang chấm bài</button>
+</div>
+
+<!-- PAGE 2: CHỤP & CHẤM -->
+<div class="page" id="pg-scan">
+  <div class="step-bar">
+    <div class="step-dot done"></div>
+    <div class="step-dot active"></div>
+    <div class="step-dot"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🎓 Học sinh</div>
+    <div class="fg"><label>Họ và tên *</label><input id="s-name" placeholder="Nguyễn Văn A" /></div>
+    <div class="row2">
+      <div class="fg"><label>Mã số</label><input id="s-id" placeholder="HS001" /></div>
+      <div class="fg"><label>Lớp</label><input id="s-class" placeholder="10A1" /></div>
+    </div>
+  </div>
+
+  <div class="card" id="exam-info-card" style="display:none;">
+    <div id="exam-info-text" style="font-size:13px;color:#374151;line-height:1.8;"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📷 Bài làm trên giấy</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <button class="btn bw bfull" onclick="openCam()">📷 Dùng camera</button>
+      <div class="upload-box" style="padding:11px;">
+        <input type="file" accept="image/*" multiple onchange="onFiles(this.files)" />
+        <div style="font-size:20px;">🖼️</div>
+        <p style="font-size:12px;margin:0;">Chọn ảnh</p>
+      </div>
+    </div>
+    <div id="img-previews"></div>
+    <div class="notice-warn" style="display:none;font-size:12px;" id="img-tip">
+      💡 Chụp thẳng từ trên xuống, đủ ánh sáng, không bóng đổ.
+    </div>
+  </div>
+
+  <button class="btn bp bfull" id="grade-btn" onclick="doGrade()">🤖 Chấm bài ngay</button>
+</div>
+
+<!-- PAGE 3: KẾT QUẢ -->
+<div class="page" id="pg-result">
+  <div class="step-bar">
+    <div class="step-dot done"></div>
+    <div class="step-dot done"></div>
+    <div class="step-dot active"></div>
+  </div>
+  <div id="result-body">
+    <div style="text-align:center;padding:48px 20px;color:var(--g);">
+      <div style="font-size:48px;margin-bottom:12px;">📊</div>
+      <p>Chưa có kết quả.</p>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 4: LỊCH SỬ -->
+<div class="page" id="pg-history">
+  <div class="stat-row" id="stat-row">
+    <div class="stat-box"><div class="stat-val" id="st-total">0</div><div class="stat-lbl">Bài đã chấm</div></div>
+    <div class="stat-box"><div class="stat-val" id="st-avg">0</div><div class="stat-lbl">Điểm TB</div></div>
+    <div class="stat-box"><div class="stat-val" id="st-pass">0</div><div class="stat-lbl">Đạt yêu cầu</div></div>
+    <div class="stat-box"><div class="stat-val" id="st-good">0</div><div class="stat-lbl">Học sinh Giỏi</div></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="card-title" style="margin:0;">🗂️ Lịch sử</div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn bo bsm" onclick="exportCSV()">📥 CSV</button>
+        <button class="btn br bsm" onclick="clearHist()">🗑️</button>
+      </div>
+    </div>
+    <div id="hist-list"><p style="text-align:center;color:var(--g);padding:20px;">Chưa có dữ liệu.</p></div>
+  </div>
+</div>
+
+<!-- PAGE 5: CÀI ĐẶT -->
+<div class="page" id="pg-cfg">
+  <div class="card">
+    <div class="card-title">🔑 Gemini API Key</div>
+    <div class="api-notice">
+      Lấy key miễn phí tại <b>aistudio.google.com</b><br>
+      → My API Keys → Create API Key → Copy
+    </div>
+    <div class="fg"><label>API Key</label><input type="password" id="cfg-key" placeholder="AIza..." /></div>
+    <div class="fg"><label>Model AI</label>
+      <select id="cfg-model">
+        <option value="gemini-2.0-flash">gemini-2.0-flash ⚡ (Nhanh, miễn phí)</option>
+        <option value="gemini-2.5-pro-preview-03-25">gemini-2.5-pro 🎯 (Chính xác nhất)</option>
+        <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <button class="btn bp bfull" onclick="saveCfg()">💾 Lưu</button>
+      <button class="btn bo bfull" onclick="testAPI()">🧪 Kiểm tra</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚙️ Ngưỡng xếp loại</div>
+    <div class="row2">
+      <div class="fg"><label>Giỏi (%)</label><input type="number" id="cfg-good" value="80" /></div>
+      <div class="fg"><label>Khá (%)</label><input type="number" id="cfg-avg" value="60" /></div>
+    </div>
+    <button class="btn bp bfull" onclick="saveCfg()">💾 Lưu</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📷 Tips chụp ảnh chuẩn</div>
+    <ul class="tip-list">
+      <li>📌 Đặt giấy trên bàn <b>trắng/sáng màu</b></li>
+      <li>☀️ Đủ ánh sáng, không bóng đổ tay</li>
+      <li>📐 Chụp <b>thẳng từ trên xuống</b>, không nghiêng</li>
+      <li>🔍 Chữ viết to rõ — ảnh sắc nét</li>
+      <li>📄 Bài dài → chia <b>2–3 ảnh</b></li>
+    </ul>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="goPage('pg-setup',this)"><span class="icon">📋</span>Đề</button>
+  <button class="nav-btn" onclick="goPage('pg-scan',this)"><span class="icon">📷</span>Chấm</button>
+  <button class="nav-btn" onclick="goPage('pg-result',this)"><span class="icon">📊</span>Kết quả</button>
+  <button class="nav-btn" onclick="goPage('pg-history',this);loadHist()"><span class="icon">🗂️</span>Lịch sử</button>
+  <button class="nav-btn" onclick="goPage('pg-cfg',this)"><span class="icon">⚙️</span>Cài đặt</button>
+</nav>
+
+<!-- Camera Modal -->
+<div class="modal" id="cam-modal">
+  <video id="vid" autoplay playsinline></video>
+  <canvas id="cv"></canvas>
+  <div class="cam-bar">
+    <button class="snap" onclick="snap()">📸</button>
+    <button class="btn br" onclick="closeCam()">✕ Đóng</button>
+    <button class="btn bo" onclick="flipCam()" style="color:#fff;background:#7c3aed;border:none;">🔄</button>
+  </div>
+  <p style="color:#fff;font-size:12px;margin-top:10px;opacity:.8;">Nhấn 📸 để chụp</p>
+</div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loader">
+  <div class="spinner"></div>
+  <div class="loading-text" id="load-txt">Đang đọc chữ viết tay...</div>
+  <div class="loading-sub" id="load-sub">Gemini AI đang phân tích ảnh bài làm</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== SUBJECTS =====================
+const SUBJECTS = [
+  {id:'toan',name:'Toán',icon:'🔢',suit:'hi',note:'Rất phù hợp',
+   prompt:'Chú ý đọc ký hiệu toán học, phân số, phương trình. Chấm theo từng bước giải: lập luận, phép tính, kết quả, kết luận. Cho điểm thành phần khi đúng một phần.',
+   rubric:[['Phương pháp','Chọn đúng cách giải, lập luận hợp lý',2],['Trình bày','Các bước rõ ràng đủ',2],['Tính toán','Kết quả số chính xác',3],['Kết luận','Kết luận đủ, đúng đơn vị',1]]},
+  {id:'van',name:'Ngữ Văn',icon:'📖',suit:'md',note:'Cần rubric rõ',
+   prompt:'Đánh giá: nội dung ý nghĩa, cấu trúc bài, ngôn ngữ diễn đạt, chính tả. Chú ý dụng ý nghệ thuật. Không quá khắt khe về sáng tạo cá nhân.',
+   rubric:[['Nội dung','Đủ ý chính, luận điểm rõ, có dẫn chứng',3],['Cấu trúc','Mở bài, thân bài, kết bài mạch lạc',2],['Ngôn ngữ','Từ ngữ phong phú, diễn đạt mượt',2],['Chính tả','Ít lỗi chính tả và ngữ pháp',1]]},
+  {id:'ly',name:'Vật Lý',icon:'⚡',suit:'hi',note:'Rất phù hợp',
+   prompt:'Đọc ký hiệu vật lý: m, v, F, J, W, Ω... Chấm: công thức đúng, thay số đúng, tính toán chính xác, đơn vị đúng, kết luận vật lý.',
+   rubric:[['Công thức','Chọn và viết đúng công thức',2],['Thay số','Thay đúng giá trị vào công thức',2],['Tính toán','Kết quả chính xác',3],['Đơn vị & KL','Đơn vị đúng, kết luận đủ',1]]},
+  {id:'hoa',name:'Hóa Học',icon:'🧪',suit:'hi',note:'Rất phù hợp',
+   prompt:'Đọc PTHH, hệ số, ký hiệu nguyên tố. Chấm: phương trình cân bằng đúng, tính mol đúng, kết quả chính xác.',
+   rubric:[['PTHH','Phương trình hóa học đúng và cân bằng',3],['Tính mol','Tính số mol, khối lượng, nồng độ đúng',3],['Kết luận','Đủ kết luận và đơn vị',2]]},
+  {id:'sinh',name:'Sinh Học',icon:'🧬',suit:'hi',note:'Rất phù hợp',
+   prompt:'Kiểm tra thuật ngữ sinh học, tên khoa học, quá trình sinh lý. So sánh ý chính với đáp án mẫu.',
+   rubric:[['Kiến thức','Đúng nội dung sinh học',4],['Thuật ngữ','Dùng đúng thuật ngữ chuyên ngành',2],['Đầy đủ','Không thiếu ý chính',2]]},
+  {id:'su',name:'Lịch Sử',icon:'🏛️',suit:'hi',note:'Rất phù hợp',
+   prompt:'Kiểm tra sự kiện, mốc thời gian, nhân vật lịch sử, nguyên nhân-kết quả. Cho điểm theo số ý đúng.',
+   rubric:[['Sự kiện','Đúng tên sự kiện, mốc thời gian',3],['Nguyên nhân','Phân tích nguyên nhân đúng',2],['Ý nghĩa','Nêu đủ ý nghĩa lịch sử',3]]},
+  {id:'dia',name:'Địa Lý',icon:'🌏',suit:'hi',note:'Rất phù hợp',
+   prompt:'Kiểm tra địa danh, đặc điểm tự nhiên, kinh tế-xã hội. Cho điểm theo số ý đúng, có phân tích.',
+   rubric:[['Kiến thức','Đúng địa danh, số liệu, đặc điểm',4],['Phân tích','Có phân tích, giải thích',2],['Đầy đủ','Không thiếu ý',2]]},
+  {id:'anh',name:'Tiếng Anh',icon:'🇬🇧',suit:'hi',note:'Rất phù hợp',
+   prompt:'Chú ý spelling, grammar, vocabulary. Chấm cả câu đúng cấu trúc và ý nghĩa, không quá khắt khe về minor spelling.',
+   rubric:[['Ngữ pháp','Cấu trúc câu đúng',3],['Từ vựng','Dùng đúng từ, đúng ngữ cảnh',3],['Chính tả','Spelling chính xác',2]]},
+  {id:'tin',name:'Tin Học',icon:'💻',suit:'hi',note:'Rất phù hợp',
+   prompt:'Kiểm tra thuật ngữ, câu lệnh, logic lập trình, bước thực hiện. Cho điểm từng phần.',
+   rubric:[['Kiến thức lý thuyết','Đúng định nghĩa, thuật ngữ',4],['Ứng dụng','Giải đúng bài tập thực hành',4]]},
+  {id:'gdcd',name:'GDCD',icon:'⚖️',suit:'hi',note:'Rất phù hợp',
+   prompt:'Kiểm tra khái niệm pháp luật, đạo đức, quyền nghĩa vụ công dân. Linh hoạt với diễn đạt cá nhân.',
+   rubric:[['Kiến thức','Đúng nội dung GDCD',4],['Ví dụ','Có ví dụ minh họa phù hợp',2],['Liên hệ thực tế','Liên hệ thực tiễn',2]]},
+];
+
+// ===================== STATE =====================
+let selSubj = SUBJECTS[0];
+let exam = null;
+let imgs = [];
+let history = JSON.parse(localStorage.getItem('cbai_hist')||'[]');
+let cfg = JSON.parse(localStorage.getItem('cbai_cfg')||'{}');
+let camStream = null, useFront = false;
+let qCount = 0, rCount = 0;
+
+// ===================== INIT =====================
+window.onload = () => {
+  buildSubjGrid();
+  if(cfg.key) document.getElementById('cfg-key').value = cfg.key;
+  if(cfg.model) document.getElementById('cfg-model').value = cfg.model;
+  if(cfg.good) document.getElementById('cfg-good').value = cfg.good;
+  if(cfg.avg) document.getElementById('cfg-avg').value = cfg.avg;
+  const saved = localStorage.getItem('cbai_exam');
+  if(saved){ exam = JSON.parse(saved); showExamInfo(); }
+  addQ(); addQ();
+};
+
+// ===================== NAV =====================
+function goPage(id, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ===================== SUBJECTS =====================
+function buildSubjGrid(){
+  const g = document.getElementById('subj-grid');
+  g.innerHTML = SUBJECTS.map((s,i)=>`
+    <div class="subj-card${i===0?' sel':''}" onclick="selSubject(${i})" id="sc-${i}">
+      <div class="si">${s.icon}</div>
+      <div class="sn">${s.name}</div>
+    </div>`).join('');
+  updateSubjNote();
+}
+function selSubject(i){
+  selSubj = SUBJECTS[i];
+  document.querySelectorAll('.subj-card').forEach((c,j)=>c.classList.toggle('sel',j===i));
+  updateSubjNote();
+}
+const suitInfo = {
+  hi:{cls:'suit-hi',txt:'🟢 Rất phù hợp'},
+  md:{cls:'suit-md',txt:'🟡 Phù hợp — cần rubric tốt'},
+  lo:{cls:'suit-lo',txt:'🔴 Hạn chế — nên kết hợp GV'}
+};
+function updateSubjNote(){
+  const s = suitInfo[selSubj.suit];
+  document.getElementById('subj-note').innerHTML =
+    `<div class="suit ${s.cls}">${s.txt}</div>
+     <p style="font-size:11px;color:var(--g);margin-top:6px;">${selSubj.prompt.substring(0,80)}...</p>`;
+}
+
+// ===================== QUESTIONS =====================
+function addQ(){
+  qCount++;
+  const c = document.getElementById('qa-list');
+  const d = document.createElement('div');
+  d.style.cssText='background:var(--bg);border:1px solid var(--b);border-radius:10px;padding:12px;margin-bottom:10px;';
+  d.id='qb-'+qCount;
+  d.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <b style="color:#1e40af;font-size:13px;">Câu ${qCount}</b>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <input type="number" id="qs-${qCount}" value="2" min="0" step="0.5" style="width:60px;text-align:center;" />
+      <button class="btn br bsm" onclick="delQ(${qCount})">✕</button>
+    </div>
+  </div>
+  <div class="fg"><label style="font-size:11px">Câu hỏi</label><input id="qt-${qCount}" placeholder="Nội dung câu hỏi..." /></div>
+  <div><label style="font-size:11px">Đáp án mẫu (GV)</label><textarea id="qa-${qCount}" rows="3" placeholder="Nhập đáp án đầy đủ, từ khóa cần có..."></textarea></div>`;
+  c.appendChild(d);
+}
+function delQ(n){ const e=document.getElementById('qb-'+n); if(e) e.remove(); }
+
+// ===================== RUBRIC =====================
+function autoRubric(){
+  const items = selSubj.rubric;
+  document.getElementById('rubric-list').innerHTML=''; rCount=0;
+  document.getElementById('rubric-section').style.display='block';
+  items.forEach(([name,desc,pts])=>{
+    rCount++;
+    const c=document.getElementById('rubric-list');
+    const d=document.createElement('div');
+    d.style.cssText='background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:10px;margin-bottom:8px;display:grid;grid-template-columns:1fr 1fr 50px;gap:8px;';
+    d.id='rb-'+rCount;
+    d.innerHTML=`<div><label style="font-size:11px">Tiêu chí</label><input id="rn-${rCount}" value="${name}" /></div>
+      <div><label style="font-size:11px">Mô tả</label><input id="rd-${rCount}" value="${desc}" /></div>
+      <div><label style="font-size:11px">Điểm</label><input type="number" id="rp-${rCount}" value="${pts}" /></div>`;
+    c.appendChild(d);
+  });
+  showToast(`✅ Tạo ${items.length} tiêu chí cho môn ${selSubj.name}`);
+}
+function addRubric(){
+  rCount++;
+  const c=document.getElementById('rubric-list');
+  const d=document.createElement('div');
+  d.style.cssText='background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:10px;margin-bottom:8px;display:grid;grid-template-columns:1fr 1fr 50px;gap:8px;';
+  d.id='rb-'+rCount;
+  d.innerHTML=`<div><label style="font-size:11px">Tiêu chí</label><input id="rn-${rCount}" placeholder="VD: Nội dung" /></div>
+    <div><label style="font-size:11px">Mô tả</label><input id="rd-${rCount}" placeholder="Từ khóa..." /></div>
+    <div><label style="font-size:11px">Điểm</label><input type="number" id="rp-${rCount}" value="2" /></div>`;
+  c.appendChild(d);
+}
+
+function saveAndNext(){
+  const qs=[];
+  document.querySelectorAll('[id^="qb-"]').forEach(b=>{
+    const id=b.id.replace('qb-','');
+    const qt=document.getElementById('qt-'+id)?.value||'';
+    const qa=document.getElementById('qa-'+id)?.value||'';
+    const qs2=parseFloat(document.getElementById('qs-'+id)?.value||2);
+    if(qt.trim()) qs.push({id,question:qt,answer:qa,score:qs2});
+  });
+  if(!qs.length){ showToast('⚠️ Nhập ít nhất 1 câu hỏi!'); return; }
+  const rubrics=[];
+  for(let i=1;i<=rCount;i++){
+    const n=document.getElementById('rn-'+i)?.value;
+    const d2=document.getElementById('rd-'+i)?.value;
+    const p=parseFloat(document.getElementById('rp-'+i)?.value||0);
+    if(n) rubrics.push({name:n,desc:d2||'',pts:p});
+  }
+  exam={
+    title: document.getElementById('ex-title').value||'Kiểm tra',
+    subject: selSubj,
+    classRoom: document.getElementById('ex-class').value,
+    totalScore: parseFloat(document.getElementById('ex-total').value||10),
+    questions:qs, rubrics,
+    createdAt: new Date().toLocaleString('vi-VN')
+  };
+  localStorage.setItem('cbai_exam', JSON.stringify(exam));
+  showToast(`✅ Đã lưu ${qs.length} câu — môn ${selSubj.name}`);
+  showExamInfo();
+  document.querySelectorAll('.nav-btn')[1].click();
+}
+
+function showExamInfo(){
+  if(!exam) return;
+  const el=document.getElementById('exam-info-card');
+  const tx=document.getElementById('exam-info-text');
+  el.style.display='block';
+  const s = suitInfo[exam.subject.suit];
+  tx.innerHTML=`<b>${exam.subject.icon} ${exam.subject.name}</b> — ${exam.title}<br>
+    Lớp: ${exam.classRoom||'—'} | Tổng: ${exam.totalScore} điểm | ${exam.questions.length} câu<br>
+    <span class="suit ${s.cls}" style="margin-top:4px;">${s.txt}</span>`;
+}
+
+// ===================== IMAGES =====================
+function onFiles(files){
+  Array.from(files).forEach(f=>{
+    const r=new FileReader();
+    r.onload=e=>{ imgs.push(e.target.result); renderImgs(); };
+    r.readAsDataURL(f);
+  });
+  document.getElementById('img-tip').style.display='block';
+}
+function renderImgs(){
+  const c=document.getElementById('img-previews');
+  c.innerHTML=imgs.map((img,i)=>`
+    <div style="position:relative;margin-bottom:8px;">
+      <img src="${img}" class="img-preview" />
+      <div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.5);color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;">Trang ${i+1}</div>
+      <button class="del-img" onclick="delImg(${i})">🗑️ Xóa ảnh ${i+1}</button>
+    </div>`).join('');
+}
+function delImg(i){ imgs.splice(i,1); renderImgs(); }
+
+// ===================== CAMERA =====================
+function openCam(){
+  navigator.mediaDevices.getUserMedia({video:{facingMode:useFront?'user':'environment'}})
+    .then(s=>{ camStream=s; document.getElementById('vid').srcObject=s; document.getElementById('cam-modal').classList.add('show'); })
+    .catch(()=>showToast('❌ Không dùng được camera. Dùng nút Chọn ảnh.'));
+}
+function snap(){
+  const v=document.getElementById('vid');
+  const cv=document.getElementById('cv');
+  cv.width=v.videoWidth; cv.height=v.videoHeight;
+  const ctx=cv.getContext('2d');
+  if(!useFront){ ctx.translate(cv.width,0); ctx.scale(-1,1); }
+  ctx.drawImage(v,0,0);
+  const d=cv.toDataURL('image/jpeg',0.92);
+  imgs.push(d); renderImgs();
+  closeCam();
+  document.getElementById('img-tip').style.display='block';
+  showToast('📸 Đã chụp ảnh '+imgs.length);
+}
+function closeCam(){
+  if(camStream) camStream.getTracks().forEach(t=>t.stop());
+  document.getElementById('cam-modal').classList.remove('show');
+}
+function flipCam(){
+  useFront=!useFront;
+  closeCam(); setTimeout(openCam,300);
+}
+
+// ===================== GRADING =====================
+async function doGrade(){
+  const name=document.getElementById('s-name').value.trim();
+  if(!name){ showToast('⚠️ Nhập tên học sinh!'); return; }
+  if(!exam){ showToast('⚠️ Chưa có đề! Tạo đề trước.'); return; }
+  if(!imgs.length){ showToast('⚠️ Chưa có ảnh bài làm!'); return; }
+  const key=cfg.key||document.getElementById('cfg-key').value;
+  if(!key){ showToast('❌ Cần API Key ở tab Cài đặt!'); return; }
+
+  showLoader('Gemini đang đọc chữ viết tay...','Phân tích '+ imgs.length +' ảnh');
+  try{
+    const model = cfg.model||'gemini-2.0-flash';
+    const rubricText = exam.rubrics.map(r=>`- ${r.name}: ${r.desc} (${r.pts}đ)`).join('\n');
+    const qText = exam.questions.map((q,i)=>`Câu ${i+1} (${q.score}đ): ${q.question}\nĐÁP ÁN MẪU: ${q.answer}`).join('\n\n');
+
+    const subj = exam.subject;
+    const prompt = `Bạn là GV chuyên môn ${subj.name}. Học sinh làm bài viết tay trên giấy (ảnh đính kèm).
+
+ĐỀ KIỂM TRA (môn ${subj.name}):
+${qText}
+
+TIÊU CHÍ CHẤM:
+${rubricText||'Chấm theo mức độ đúng so với đáp án mẫu'}
+
+LƯU Ý CHUYÊN MÔN: ${subj.prompt}
+
+TỔNG ĐIỂM TỐI ĐA: ${exam.totalScore}
+
+Nhiệm vụ:
+1. Đọc toàn bộ chữ viết tay trong ảnh (kể cả công thức, ký hiệu)
+2. Xác định bài làm từng câu
+3. Chấm điểm theo đáp án mẫu và tiêu chí
+
+Trả về JSON:
+{
+  "questions": [
+    {
+      "q_num": 1,
+      "ocr_text": "trích nguyên văn HS viết",
+      "score": <điểm đạt (số thực)>,
+      "max_score": <điểm tối đa>,
+      "feedback": "nhận xét tiếng Việt 1-2 câu",
+      "matched": ["ý đúng"],
+      "missing": ["ý thiếu"]
+    }
+  ],
+  "general_note": "nhận xét chung ngắn gọn"
+}`;
+
+    const parts = [{text: prompt}];
+    imgs.forEach(img=>{
+      const b64=img.split(',')[1];
+      const mime=img.split(';')[0].split(':')[1];
+      parts.push({inlineData:{mimeType:mime,data:b64}});
+    });
+
+    updateLoader('Gemini AI đang chấm điểm...','Đối chiếu đáp án mẫu');
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts}],generationConfig:{temperature:0.1,responseMimeType:'application/json'}})
+    });
+    if(!res.ok){ const e=await res.json(); throw new Error(e.error?.message||'API Error'); }
+    const data = await res.json();
+    const txt = data.candidates?.[0]?.content?.parts?.[0]?.text||'{}';
+    const parsed = JSON.parse(txt);
+
+    const qResults = parsed.questions.map((q,i)=>({
+      q: exam.questions[i]||exam.questions[0],
+      ocrText: q.ocr_text||'',
+      earned: Math.min(q.score||0, exam.questions[i]?.score||2),
+      pct: Math.round(((q.score||0)/(q.max_score||2))*100),
+      feedback: q.feedback||'',
+      matched: q.matched||[],
+      missing: q.missing||[]
+    }));
+
+    const total = Math.min(qResults.reduce((a,b)=>a+b.earned,0), exam.totalScore);
+    const pct = Math.round((total/exam.totalScore)*100);
+    const thG=parseInt(cfg.good||80), thA=parseInt(cfg.avg||60);
+    const grade = pct>=thG?'Giỏi':pct>=thA?'Khá':pct>=40?'Trung Bình':'Yếu';
+
+    const rec={
+      id:Date.now(), name, stuId:document.getElementById('s-id').value,
+      classRoom:document.getElementById('s-class').value,
+      subject:exam.subject.name, subjectIcon:exam.subject.icon,
+      examTitle:exam.title, finalScore:total,
+      totalScore:exam.totalScore, pct, grade,
+      qResults, generalNote:parsed.general_note||'',
+      gradedAt:new Date().toLocaleString('vi-VN'),
+      imgCount:imgs.length
+    };
+    history.unshift(rec);
+    localStorage.setItem('cbai_hist',JSON.stringify(history));
+    renderResult(rec);
+    hideLoader();
+    showToast(`✅ ${name}: ${total.toFixed(1)}/${exam.totalScore} — ${grade}`);
+    document.querySelectorAll('.nav-btn')[2].click();
+  }catch(e){
+    hideLoader();
+    showToast('❌ Lỗi: '+e.message.substring(0,60));
+  }
+}
+
+function renderResult(rec){
+  const gc=rec.pct>=80?'hi':rec.pct>=60?'md':'lo';
+  const col=rec.pct>=80?'var(--s)':rec.pct>=60?'var(--w)':'var(--r)';
+  const ge=rec.pct>=80?'🏆':rec.pct>=60?'👍':'📚';
+
+  const qHtml=rec.qResults.map((qr,i)=>{
+    const c=qr.pct>=80?'hi':qr.pct>=50?'md':'lo';
+    const mTags=qr.matched.map(m=>`<span class="tag tag-g">✓ ${m}</span>`).join('');
+    const xTags=qr.missing.map(m=>`<span class="tag tag-r">✗ ${m}</span>`).join('');
+    return `<div class="q-res ${c}">
+      <div class="q-res-header">
+        <b style="font-size:13px;">Câu ${i+1}: ${qr.q.question.substring(0,45)}${qr.q.question.length>45?'...':''}</b>
+        <span style="font-size:15px;font-weight:900;flex-shrink:0;">${qr.earned.toFixed(1)}/${qr.q.score}</span>
+      </div>
+      ${qr.ocrText?`<div style="font-size:11px;font-weight:600;color:var(--g);">📖 AI đọc được:</div><div class="ocr-box">${qr.ocrText}</div>`:''}
+      <div style="font-size:12px;margin:6px 0;">${qr.feedback}</div>
+      <div style="margin-top:4px;">${mTags}${xTags}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('result-body').innerHTML=`
+    <div class="card score-hero">
+      <div class="score-num" style="color:${col};">${rec.finalScore.toFixed(1)}</div>
+      <div class="score-sub">/ ${rec.totalScore} điểm</div>
+      <div class="grade-pill" style="background:${rec.pct>=80?'#dcfce7':rec.pct>=60?'#fef9c3':'#fee2e2'};color:${col};">${ge} ${rec.grade}</div>
+      <div class="prog"><div class="prog-fill" style="width:${rec.pct}%;background:${col};"></div></div>
+      <div style="font-size:12px;color:var(--g);">${rec.name} • ${rec.subjectIcon} ${rec.subject}<br>${rec.examTitle} • ${rec.gradedAt}</div>
+      ${rec.generalNote?`<div style="margin-top:8px;font-size:12px;color:#374151;background:var(--bg);border-radius:8px;padding:8px;">${rec.generalNote}</div>`:''}
+    </div>
+    <div class="card"><div class="card-title">📋 Chi tiết từng câu</div>${qHtml}</div>
+    <button class="btn bp bfull" onclick="newGrade()" style="margin-bottom:6px;">📷 Chấm bài tiếp</button>`;
+}
+
+function newGrade(){
+  imgs=[]; renderImgs();
+  document.getElementById('s-name').value='';
+  document.getElementById('s-id').value='';
+  document.querySelectorAll('.nav-btn')[1].click();
+}
+
+// ===================== HISTORY =====================
+function loadHist(){
+  const c=document.getElementById('hist-list');
+  if(!history.length){ c.innerHTML='<p style="text-align:center;color:var(--g);padding:20px;">Chưa có dữ liệu.</p>'; return; }
+  const avg=history.reduce((a,b)=>a+b.finalScore,0)/history.length;
+  document.getElementById('st-total').textContent=history.length;
+  document.getElementById('st-avg').textContent=avg.toFixed(1);
+  document.getElementById('st-pass').textContent=history.filter(r=>r.pct>=50).length;
+  document.getElementById('st-good').textContent=history.filter(r=>r.pct>=80).length;
+  c.innerHTML=history.map(r=>`
+    <div class="hist-item" onclick="viewRec(${r.id})" style="cursor:pointer;">
+      <div>
+        <div class="hist-name">${r.subjectIcon||'📝'} ${r.name}</div>
+        <div class="hist-sub">${r.subject} • ${r.examTitle} • ${r.gradedAt}</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="hist-score">${r.finalScore.toFixed(1)}</div>
+        <div style="font-size:11px;color:${r.pct>=80?'var(--s)':r.pct>=60?'var(--w)':'var(--r)'};">${r.grade}</div>
+      </div>
+    </div>`).join('');
+}
+function viewRec(id){
+  const r=history.find(x=>x.id===id);
+  if(r){ renderResult(r); document.querySelectorAll('.nav-btn')[2].click(); }
+}
+function clearHist(){
+  if(confirm('Xóa toàn bộ lịch sử?')){ history=[]; localStorage.setItem('cbai_hist','[]'); loadHist(); }
+}
+function exportCSV(){
+  const h='Thời gian,Tên HS,Môn,Đề,Điểm,Tổng,Xếp loại\n';
+  const rows=history.map(r=>`"${r.gradedAt}","${r.name}","${r.subject}","${r.examTitle}",${r.finalScore},${r.totalScore},"${r.grade}"`).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\uFEFF'+h+rows],{type:'text/csv;charset=utf-8;'})); a.download='cham_bai.csv'; a.click();
+}
+
+// ===================== CONFIG =====================
+function saveCfg(){
+  cfg={key:document.getElementById('cfg-key').value, model:document.getElementById('cfg-model').value, good:document.getElementById('cfg-good').value, avg:document.getElementById('cfg-avg').value};
+  localStorage.setItem('cbai_cfg',JSON.stringify(cfg));
+  showToast('✅ Đã lưu cài đặt!');
+}
+async function testAPI(){
+  const k=document.getElementById('cfg-key').value;
+  if(!k){ showToast('⚠️ Nhập API Key trước!'); return; }
+  showToast('🧪 Đang kiểm tra...');
+  try{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${k}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:'Hi'}]}]})});
+    const d=await r.json();
+    showToast(d.candidates?'✅ Kết nối thành công!':'❌ '+(d.error?.message||'Lỗi'));
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+// ===================== UI =====================
+function showLoader(t,s){ document.getElementById('load-txt').textContent=t; document.getElementById('load-sub').textContent=s; document.getElementById('loader').classList.add('show'); }
+function updateLoader(t,s){ document.getElementById('load-txt').textContent=t; document.getElementById('load-sub').textContent=s; }
+function hideLoader(){ document.getElementById('loader').classList.remove('show'); }
+function showToast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+</script>
+</body>
+</html>
